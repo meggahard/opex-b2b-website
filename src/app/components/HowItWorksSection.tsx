@@ -1,3 +1,4 @@
+'use client';
 import React from 'react';
 
 const steps = [
@@ -18,6 +19,8 @@ const steps = [
     time: '3 min',
     span: 'lg:col-span-5',
     accent: false,
+    /** Section ID to scroll to when this step card is clicked */
+    targetId: 'calculator',
   },
   {
     number: '02',
@@ -33,6 +36,7 @@ const steps = [
     time: '5 min',
     span: 'lg:col-span-7',
     accent: true,
+    targetId: 'oee-simulation',
   },
   {
     number: '03',
@@ -47,8 +51,16 @@ const steps = [
     time: '2 min',
     span: 'lg:col-span-12',
     accent: false,
+    targetId: 'business-case',
   },
 ];
+
+function scrollToSection(id: string) {
+  const el = document.getElementById(id);
+  if (el) {
+    el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+}
 
 export default function HowItWorksSection() {
   return (
@@ -63,15 +75,23 @@ export default function HowItWorksSection() {
             From Annual Report to<br />
             <span className="text-amber">Business Case in 10 minutes.</span>
           </h2>
+          <p className="text-sm text-muted-foreground mt-3 font-body">
+            Click any step below to jump directly to that section.
+          </p>
         </div>
 
         {/* Steps grid — asymmetric */}
         <div className="grid lg:grid-cols-12 gap-6">
           {/* Step 1 — compact */}
           <div className="lg:col-span-5 reveal-item" data-delay="0.1">
-            <div className="card-hover bg-card border border-border rounded-4xl p-8 h-full flex flex-col justify-between min-h-[280px] shadow-card">
+            <button
+              type="button"
+              onClick={() => scrollToSection(steps[0].targetId)}
+              className="w-full text-left card-hover bg-card border border-border rounded-4xl p-8 h-full flex flex-col justify-between min-h-[280px] shadow-card group cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-primary transition-all"
+              aria-label={`Go to Step 1: ${steps[0].title}`}
+            >
               <div className="flex items-start justify-between mb-6">
-                <div className="w-14 h-14 bg-primary rounded-2xl flex items-center justify-center text-primary-foreground">
+                <div className="w-14 h-14 bg-primary rounded-2xl flex items-center justify-center text-primary-foreground group-hover:scale-105 transition-transform">
                   {steps?.[0]?.icon}
                 </div>
                 <div className="flex items-center gap-2">
@@ -82,18 +102,29 @@ export default function HowItWorksSection() {
                 </div>
               </div>
               <div>
-                <h3 className="text-2xl font-black text-foreground mb-3 tracking-tight">{steps?.[0]?.title}</h3>
+                <h3 className="text-2xl font-black text-foreground mb-3 tracking-tight group-hover:text-primary transition-colors">{steps?.[0]?.title}</h3>
                 <p className="text-muted-foreground leading-relaxed mb-4 font-body text-sm">{steps?.[0]?.description}</p>
-                <div className="text-xs font-bold text-amber tracking-wide">{steps?.[0]?.detail}</div>
+                <div className="flex items-center justify-between">
+                  <div className="text-xs font-bold text-amber tracking-wide">{steps?.[0]?.detail}</div>
+                  <span className="text-xs font-bold text-primary opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1">
+                    Go to step
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                      <polyline points="6 9 12 15 18 9" />
+                    </svg>
+                  </span>
+                </div>
               </div>
-            </div>
+            </button>
           </div>
 
           {/* Step 2 — wider, accent */}
           <div className="lg:col-span-7 reveal-item" data-delay="0.2">
-            <div
-              className="card-hover rounded-4xl p-8 h-full flex flex-col justify-between min-h-[280px] relative overflow-hidden"
+            <button
+              type="button"
+              onClick={() => scrollToSection(steps[1].targetId)}
+              className="w-full text-left card-hover rounded-4xl p-8 h-full flex flex-col justify-between min-h-[280px] relative overflow-hidden group cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-amber"
               style={{ background: 'linear-gradient(135deg, #0B1929 0%, #1E3A5F 100%)' }}
+              aria-label={`Go to Step 2: ${steps[1].title}`}
             >
               <div
                 className="absolute top-0 right-0 w-64 h-64 rounded-full opacity-20"
@@ -101,7 +132,7 @@ export default function HowItWorksSection() {
                 aria-hidden="true"
               />
               <div className="flex items-start justify-between mb-6 relative z-10">
-                <div className="w-14 h-14 bg-amber/20 rounded-2xl flex items-center justify-center text-amber">
+                <div className="w-14 h-14 bg-amber/20 rounded-2xl flex items-center justify-center text-amber group-hover:scale-105 transition-transform">
                   {steps?.[1]?.icon}
                 </div>
                 <div className="flex items-center gap-2">
@@ -112,9 +143,17 @@ export default function HowItWorksSection() {
                 </div>
               </div>
               <div className="relative z-10">
-                <h3 className="text-2xl font-black text-white mb-3 tracking-tight">{steps?.[1]?.title}</h3>
+                <h3 className="text-2xl font-black text-white mb-3 tracking-tight group-hover:text-amber transition-colors">{steps?.[1]?.title}</h3>
                 <p className="text-white/60 leading-relaxed mb-4 font-body text-sm">{steps?.[1]?.description}</p>
-                <div className="text-xs font-bold text-amber tracking-wide">{steps?.[1]?.detail}</div>
+                <div className="flex items-center justify-between">
+                  <div className="text-xs font-bold text-amber tracking-wide">{steps?.[1]?.detail}</div>
+                  <span className="text-xs font-bold text-amber opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1">
+                    Go to step
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                      <polyline points="6 9 12 15 18 9" />
+                    </svg>
+                  </span>
+                </div>
               </div>
               {/* OEE mini visualization */}
               <div className="relative z-10 mt-6 flex gap-3">
@@ -135,15 +174,20 @@ export default function HowItWorksSection() {
                   </div>
                 ))}
               </div>
-            </div>
+            </button>
           </div>
 
           {/* Step 3 — full width */}
           <div className="lg:col-span-12 reveal-item" data-delay="0.3">
-            <div className="card-hover bg-card border border-border rounded-4xl p-8 shadow-card">
+            <button
+              type="button"
+              onClick={() => scrollToSection(steps[2].targetId)}
+              className="w-full text-left card-hover bg-card border border-border rounded-4xl p-8 shadow-card group cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+              aria-label={`Go to Step 3: ${steps[2].title}`}
+            >
               <div className="grid md:grid-cols-3 gap-8 items-center">
                 <div className="md:col-span-1 flex items-start gap-4">
-                  <div className="w-14 h-14 bg-amber/10 rounded-2xl flex items-center justify-center text-amber flex-shrink-0">
+                  <div className="w-14 h-14 bg-amber/10 rounded-2xl flex items-center justify-center text-amber flex-shrink-0 group-hover:scale-105 transition-transform">
                     {steps?.[2]?.icon}
                   </div>
                   <div className="flex items-center gap-2">
@@ -154,8 +198,14 @@ export default function HowItWorksSection() {
                   </div>
                 </div>
                 <div className="md:col-span-1">
-                  <h3 className="text-2xl font-black text-foreground mb-2 tracking-tight">{steps?.[2]?.title}</h3>
+                  <h3 className="text-2xl font-black text-foreground mb-2 tracking-tight group-hover:text-amber transition-colors">{steps?.[2]?.title}</h3>
                   <p className="text-muted-foreground leading-relaxed font-body text-sm">{steps?.[2]?.description}</p>
+                  <span className="text-xs font-bold text-amber opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1 mt-2">
+                    Go to step
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                      <polyline points="6 9 12 15 18 9" />
+                    </svg>
+                  </span>
                 </div>
                 <div className="md:col-span-1">
                   <div className="grid grid-cols-2 gap-3">
@@ -168,7 +218,7 @@ export default function HowItWorksSection() {
                   </div>
                 </div>
               </div>
-            </div>
+            </button>
           </div>
         </div>
 

@@ -8,8 +8,24 @@ interface Props {
 }
 
 function computeBusinessCase(fd: FinancialData, od: OEEData) {
-  const baseOEE = (od.availability / 100) * (od.performance / 100) * (od.quality / 100) * 100;
-  const targetOEE = (od.targetAvailability / 100) * (od.targetPerformance / 100) * (od.targetQuality / 100) * 100;
+  // ── Derive A/P/Q from granular inputs (same logic as OEESimulationModule) ──
+  const derivedAvailability = od.scheduledHours > 0
+    ? Math.min(100, Math.max(0, ((od.scheduledHours - od.plannedDowntime - od.unplannedDowntime) / od.scheduledHours) * 100))
+    : od.availability;
+  const derivedPerformance = od.targetRate > 0
+    ? Math.min(100, Math.max(0, (od.actualRate / od.targetRate) * 100))
+    : od.performance;
+  // Quality derived from totalUnits (Good Units + Quality Loss) — totalUnits is auto-calculated
+  const derivedQuality = od.totalUnits > 0
+    ? Math.min(100, Math.max(0, ((od.totalUnits - od.qualityLossUnits) / od.totalUnits) * 100))
+    : od.quality;
+
+  const safeTargetAvailability = Math.max(od.targetAvailability, derivedAvailability);
+  const safeTargetPerformance = Math.max(od.targetPerformance, derivedPerformance);
+  const safeTargetQuality = Math.max(od.targetQuality, derivedQuality);
+
+  const baseOEE = (derivedAvailability / 100) * (derivedPerformance / 100) * (derivedQuality / 100) * 100;
+  const targetOEE = (safeTargetAvailability / 100) * (safeTargetPerformance / 100) * (safeTargetQuality / 100) * 100;
   const oeeDelta = targetOEE - baseOEE;
 
   const baseCOGS = fd.cogs * 1000;
@@ -19,8 +35,9 @@ function computeBusinessCase(fd: FinancialData, od: OEEData) {
   const improvedCOGS = (fd.cogs * 1000 - annualSaving) / 1000;
   const improvedGrossMargin = fd.revenue > 0 ? ((fd.revenue - improvedCOGS) / fd.revenue) * 100 : 0;
 
-  const baseCostPerUnit = fd.unitsProduced > 0 ? (fd.cogs * 1000) / fd.unitsProduced : 0;
-  const improvedCostPerUnit = fd.unitsProduced > 0 ? ((fd.cogs * 1000 - annualSaving)) / fd.unitsProduced : 0;
+  // Cost per unit uses unitsSold (Good Units from financial report)
+  const baseCostPerUnit = fd.unitsSold > 0 ? (fd.cogs * 1000) / fd.unitsSold : 0;
+  const improvedCostPerUnit = fd.unitsSold > 0 ? ((fd.cogs * 1000 - annualSaving)) / fd.unitsSold : 0;
 
   const baseNPM = fd.revenue > 0 ? (fd.netIncome / fd.revenue) * 100 : 0;
   const improvedNetIncome = fd.netIncome + annualSaving / 1000;
@@ -35,8 +52,10 @@ function computeBusinessCase(fd: FinancialData, od: OEEData) {
 
   const paybackMonths = annualSaving > 0 ? (fd.implementationCost * 1000) / (annualSaving / 12) : 0;
 
+  // Loss calculations using derived quality fraction
   const downtimeLoss = baseCOGS * (od.scheduledHours > 0 ? od.unplannedDowntime / od.scheduledHours : 0.21) * 0.7;
-  const qualityLoss = baseCOGS * (od.totalUnits > 0 ? od.qualityLossUnits / od.totalUnits : 0.004) * 2.1;
+  const qualityLossFraction = od.totalUnits > 0 ? od.qualityLossUnits / od.totalUnits : (1 - derivedQuality / 100);
+  const qualityLoss = baseCOGS * qualityLossFraction * 2.1;
   const performanceLoss = baseCOGS * (od.targetRate > 0 ? (od.targetRate - od.actualRate) / od.targetRate : 0.008) * 0.5;
 
   return {

@@ -60,7 +60,12 @@ export interface FinancialData {
   currency: CurrencyCode;
   currencySymbol: string;
   unitOfMeasure: string;
-  unitsProduced: number;
+  /**
+   * UNITS SOLD — the figure from the financial report (goods actually sold).
+   * This syncs to Good Units in the Granular Production Inputs.
+   * @formerly unitsProduced
+   */
+  unitsSold: number;
   implementationCost: number;
   reportingPeriod: ReportingPeriod;
 }
@@ -77,6 +82,10 @@ export interface OEEData {
   unplannedDowntime: number;
   actualRate: number;
   targetRate: number;
+  /**
+   * Total Units Produced = Good Units (unitsSold) + Quality Loss Units.
+   * Auto-calculated when qualityLossUnits changes.
+   */
   totalUnits: number;
   qualityLossUnits: number;
 }
@@ -108,7 +117,14 @@ const currentAssets = 16000;
 const fixedAssets = 22000;
 const currentLiabilities = 7500;
 const revenue = 45000;
-const unitsProduced = 5017260;
+
+/**
+ * UNITS SOLD = 5,017,260 (Good Units — from financial report)
+ * Total Units Produced = unitsSold + qualityLossUnits = 5,017,260 + 60,966 = 5,078,226
+ */
+const unitsSold = 5017260;
+const defaultQualityLossUnits = 60966;
+const defaultTotalUnits = unitsSold + defaultQualityLossUnits; // 5,078,226
 
 // ── Calculated totals ──
 const totalCOGS = rawMaterials + directLabor + overhead;           // 27873
@@ -136,7 +152,7 @@ const defaultFinancial: FinancialData = {
   currency: 'ZAR',
   currencySymbol: 'R',
   unitOfMeasure: 'Unit',
-  unitsProduced,
+  unitsSold,
   implementationCost: 45,
   reportingPeriod: 'Annual',
 };
@@ -153,8 +169,9 @@ const defaultOEE: OEEData = {
   unplannedDowntime: 440,
   actualRate: 13389,
   targetRate: 13500,
-  totalUnits: 5078226,
-  qualityLossUnits: 60966,
+  // totalUnits = Good Units (unitsSold) + qualityLossUnits
+  totalUnits: defaultTotalUnits,
+  qualityLossUnits: defaultQualityLossUnits,
 };
 
 export default function CalculatorSection() {
@@ -163,6 +180,40 @@ export default function CalculatorSection() {
   const [leadData, setLeadData] = useState<LeadData | null>(null);
   const [showReport, setShowReport] = useState(false);
   const reportRef = useRef<HTMLDivElement>(null);
+
+  /**
+   * When financial data changes, sync unitsSold → OEE Good Units.
+   * totalUnits = unitsSold + qualityLossUnits (Good Units + rejects)
+   */
+  const handleFinancialChange = useCallback((data: FinancialData) => {
+    setFinancialData(data);
+    // Sync: Good Units = unitsSold; Total Units Produced = Good Units + Quality Loss
+    setOEEData((prev) => {
+      const newTotalUnits = data.unitsSold + prev.qualityLossUnits;
+      // Recalculate quality from updated totals
+      const newQuality = newTotalUnits > 0
+        ? Math.min(100, Math.max(0, (data.unitsSold / newTotalUnits) * 100))
+        : prev.quality;
+      return {
+        ...prev,
+        totalUnits: newTotalUnits,
+        quality: newQuality,
+        targetQuality: Math.max(prev.targetQuality, newQuality),
+      };
+    });
+  }, []);
+
+  /**
+   * When OEE data changes (e.g. qualityLossUnits edited directly),
+   * recalculate totalUnits = Good Units (unitsSold) + qualityLossUnits.
+   */
+  const handleOEEChange = useCallback((data: OEEData) => {
+    // Ensure totalUnits always = Good Units (financialData.unitsSold) + qualityLossUnits
+    const goodUnits = financialData.unitsSold;
+    const newTotalUnits = goodUnits + data.qualityLossUnits;
+    const syncedData = { ...data, totalUnits: newTotalUnits };
+    setOEEData(syncedData);
+  }, [financialData.unitsSold]);
 
   const handleLeadSubmit = useCallback((data: LeadData) => {
     setLeadData(data);
@@ -178,17 +229,17 @@ export default function CalculatorSection() {
     <>
       <FinancialInputModule
         data={financialData}
-        onChange={setFinancialData}
+        onChange={handleFinancialChange}
       />
       <OEESimulationModule
         data={oeeData}
         financialData={financialData}
-        onChange={setOEEData}
+        onChange={handleOEEChange}
       />
       <WhatIfModule
         oeeData={oeeData}
         financialData={financialData}
-        onOEEChange={setOEEData}
+        onOEEChange={handleOEEChange}
       />
       <BusinessCasePreview
         financialData={financialData}

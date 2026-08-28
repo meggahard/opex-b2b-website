@@ -83,8 +83,8 @@ function computeImpact(oeeData: OEEData, financialData: FinancialData) {
     ? (financialData.implementationCost * 1000) / (annualSaving / 12)
     : 0;
 
-  const baseCostPerUnit = financialData.unitsProduced > 0 ? baseCOGS / financialData.unitsProduced : 0;
-  const targetCostPerUnit = financialData.unitsProduced > 0 && baseOEE > 0 && targetOEE > 0
+  const baseCostPerUnit = financialData.unitsSold > 0 ? baseCOGS / financialData.unitsSold : 0;
+  const targetCostPerUnit = financialData.unitsSold > 0 && baseOEE > 0 && targetOEE > 0
     ? baseCostPerUnit * (baseOEE / targetOEE)
     : baseCostPerUnit;
 

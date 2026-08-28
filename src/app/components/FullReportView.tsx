@@ -67,9 +67,9 @@ function computeReport(fd: FinancialData, od: OEEData) {
   const baseRONA = capitalEmployed > 0 ? (fd.netIncome / capitalEmployed) * 100 : 0;
   const improvedRONA = capitalEmployed > 0 ? (improvedNetIncome / capitalEmployed) * 100 : 0;
 
-  // Cost per unit
-  const baseCostPerUnit = fd.unitsProduced > 0 ? baseCOGS / fd.unitsProduced : 0;
-  const targetCostPerUnit = fd.unitsProduced > 0 && baseOEE > 0 && targetOEE > 0
+  // Cost per unit — uses unitsSold (Good Units from financial report)
+  const baseCostPerUnit = fd.unitsSold > 0 ? baseCOGS / fd.unitsSold : 0;
+  const targetCostPerUnit = fd.unitsSold > 0 && baseOEE > 0 && targetOEE > 0
     ? baseCostPerUnit * (baseOEE / targetOEE)
     : baseCostPerUnit;
 

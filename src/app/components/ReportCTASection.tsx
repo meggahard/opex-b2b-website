@@ -1,6 +1,7 @@
 'use client';
 import React, { useState, useEffect } from 'react';
 import type { LeadData } from './CalculatorSection';
+import RunbookDownloadButton from './RunbookDownloadButton';
 
 interface Props {
   onLeadSubmit: (data: LeadData) => void;
@@ -432,6 +433,7 @@ export default function ReportCTASection({ onLeadSubmit, submitted }: Props) {
                     <path d="M5 12h14M12 5l7 7-7 7" />
                   </svg>
                 </button>
+                <RunbookDownloadButton className="text-base px-8 py-5 border-primary-foreground/30 text-primary-foreground hover:bg-primary-foreground/10" />
                 <button
                   onClick={() => setShowAuditModal(true)}
                   className="btn-outline text-base px-8 py-5 border-primary-foreground/30 text-primary-foreground hover:bg-primary-foreground/10"
@@ -448,6 +450,9 @@ export default function ReportCTASection({ onLeadSubmit, submitted }: Props) {
               </div>
               <p className="text-primary-foreground/30 text-xs font-body">
                 No credit card required. All calculations run in your browser.
+              </p>
+              <p className="text-primary-foreground/40 text-xs font-body mt-1">
+                💡 <strong className="text-primary-foreground/60">Tip:</strong> Download the Runbook first — it helps you collect accurate data from your Finance &amp; Production teams before filling the form.
               </p>
             </div>
           ) : (

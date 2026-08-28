@@ -140,7 +140,8 @@ export default function FinancialInputModule({ data, onChange }: Props) {
   const grossProfit = data.revenue - totalCOGS;
   const grossMargin = data.revenue > 0 ? (grossProfit / data.revenue) * 100 : 0;
   const ebitMargin = data.revenue > 0 ? (netIncome / data.revenue) * 100 : 0;
-  const costPerUnit = data.unitsProduced > 0 ? (totalCOGS * 1000) / data.unitsProduced : 0;
+  // Cost per unit uses unitsSold (Good Units from financial report)
+  const costPerUnit = data.unitsSold > 0 ? (totalCOGS * 1000) / data.unitsSold : 0;
 
   // Balance Sheet derived
   const totalAssets = data.currentAssets + data.fixedAssets;
@@ -240,10 +241,10 @@ export default function FinancialInputModule({ data, onChange }: Props) {
                   hint={`${periodLabel} P&L top line`}
                 />
                 <NumInput
-                  label={`Units Produced (${periodSuffix})`}
-                  value={data.unitsProduced}
-                  onChange={(v) => update('unitsProduced', v)}
-                  hint="Total production units"
+                  label="UNITS SOLD"
+                  value={data.unitsSold}
+                  onChange={(v) => update('unitsSold', v)}
+                  hint="Total sold units (from financial report — syncs to Good Units)"
                 />
                 {/* UOM with dropdown */}
                 <div className="md:col-span-2">

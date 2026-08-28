@@ -168,10 +168,10 @@ export default function OEESimulationModule({ data, financialData, onChange }: P
   const targetOEEColor = getOEEColor(targetOEE);
 
   // Cost/Unit calculations — use computed COGS from financial data
-  const baseCostPerUnit = financialData.unitsProduced > 0
-    ? (financialData.cogs * 1000) / financialData.unitsProduced
+  const baseCostPerUnit = financialData.unitsSold > 0
+    ? (financialData.cogs * 1000) / financialData.unitsSold
     : 0;
-  const targetCostPerUnit = financialData.unitsProduced > 0 && oee > 0 && targetOEE > 0
+  const targetCostPerUnit = financialData.unitsSold > 0 && oee > 0 && targetOEE > 0
     ? baseCostPerUnit * (oee / targetOEE)
     : baseCostPerUnit;
 
@@ -210,13 +210,12 @@ export default function OEESimulationModule({ data, financialData, onChange }: P
               </p>
               <div className="grid md:grid-cols-2 gap-5">
                 {[
-                  { key: 'scheduledHours' as const, label: 'Scheduled Hours', suffix: 'hrs', hint: 'Total planned production hours' },
-                  { key: 'plannedDowntime' as const, label: 'Planned Downtime', suffix: 'hrs', hint: 'Maintenance, changeovers' },
-                  { key: 'unplannedDowntime' as const, label: 'Unplanned Downtime', suffix: 'hrs', hint: 'Breakdowns, stoppages' },
-                  { key: 'actualRate' as const, label: 'Actual Production Rate', suffix: `${financialData.unitOfMeasure}/hr`, hint: 'Actual throughput' },
-                  { key: 'targetRate' as const, label: 'Target Production Rate', suffix: `${financialData.unitOfMeasure}/hr`, hint: 'Nameplate capacity' },
-                  { key: 'totalUnits' as const, label: 'Total Units Produced', suffix: financialData.unitOfMeasure, hint: 'Including rejects' },
-                  { key: 'qualityLossUnits' as const, label: 'Quality Loss Units', suffix: financialData.unitOfMeasure, hint: 'Scrap + rework' },
+                  { key: 'scheduledHours' as const, label: 'Scheduled Hours', suffix: 'hrs', hint: 'Total planned production hours', readOnly: false },
+                  { key: 'plannedDowntime' as const, label: 'Planned Downtime', suffix: 'hrs', hint: 'Maintenance, changeovers', readOnly: false },
+                  { key: 'unplannedDowntime' as const, label: 'Unplanned Downtime', suffix: 'hrs', hint: 'Breakdowns, stoppages', readOnly: false },
+                  { key: 'actualRate' as const, label: 'Actual Production Rate', suffix: `${financialData.unitOfMeasure}/hr`, hint: 'Actual throughput', readOnly: false },
+                  { key: 'targetRate' as const, label: 'Target Production Rate', suffix: `${financialData.unitOfMeasure}/hr`, hint: 'Nameplate capacity', readOnly: false },
+                  { key: 'qualityLossUnits' as const, label: 'Quality Loss Units', suffix: financialData.unitOfMeasure, hint: 'Scrap + rework (enter manually)', readOnly: false },
                 ].map((field) => (
                   <div key={field.key}>
                     <label className="input-label">{field.label}</label>
@@ -234,13 +233,25 @@ export default function OEESimulationModule({ data, financialData, onChange }: P
                     </div>
                   </div>
                 ))}
+                {/* Total Units Produced — read-only, auto-calculated = Good Units + Quality Loss */}
+                <div>
+                  <label className="input-label flex items-center gap-1.5">
+                    Total Units Produced
+                    <span className="text-[10px] font-bold uppercase tracking-widest text-amber bg-amber/10 px-1.5 py-0.5 rounded-full">Auto</span>
+                  </label>
+                  <div className="text-xs text-muted-foreground mb-1">Good Units + Quality Loss Units</div>
+                  <div className="relative flex items-center rounded-2xl border bg-amber/5 border-amber/30 px-3 py-2.5">
+                    <span className="text-sm font-black text-amber flex-1">{data.totalUnits.toLocaleString()}</span>
+                    <span className="text-muted-foreground text-xs font-bold ml-1">{financialData.unitOfMeasure}</span>
+                  </div>
+                </div>
               </div>
               {/* Auto-calculated derived fields */}
               <div className="grid grid-cols-3 gap-4 pt-4 mt-4 border-t border-border">
                 {[
                   { label: 'Line Uptime', value: `${Math.max(0, data.scheduledHours - data.plannedDowntime - data.unplannedDowntime).toFixed(0)} hrs` },
                   { label: 'Rate Loss', value: `${Math.max(0, data.targetRate - data.actualRate).toFixed(0)} ${financialData.unitOfMeasure}/hr` },
-                  { label: 'Good Units', value: `${Math.max(0, data.totalUnits - data.qualityLossUnits).toLocaleString()}` },
+                  { label: 'Good Units', value: `${financialData.unitsSold.toLocaleString()}` },
                 ].map((calc) => (
                   <div key={calc.label} className="bg-muted/50 rounded-2xl p-3 text-center">
                     <div className="text-xs font-bold uppercase tracking-widest text-muted-foreground mb-1">{calc.label}</div>
